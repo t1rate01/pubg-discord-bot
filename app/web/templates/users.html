@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Tracked Users</h1>
+  <a class="button" href="/users/new">Add user</a>
+</div>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Discord name</th>
+          <th>Discord ID</th>
+          <th>PUBG handle</th>
+          <th>Tracking</th>
+          <th>History</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.discord_name }}</td>
+          <td>{{ user.discord_user_id }}</td>
+          <td>{{ user.pubg_handle or "-" }}</td>
+          <td>{{ "Yes" if user.tracking_enabled else "No" }}</td>
+          <td>{{ "Yes" if user.history_enabled else "No" }}</td>
+          <td class="actions">
+            <a class="button secondary" href="/users/{{ user.id }}/edit">Edit</a>
+            <form method="post" action="/users/{{ user.id }}/delete" onsubmit="return confirm('Delete this user?');">
+              <button class="button danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Settings</h1>
+
+<section class="panel form-panel">
+  <form method="post" action="/settings">
+    <label>
+      <span>Tracked team name</span>
+      <input type="text" name="tracked_team_name" value="{{ state.runtime_config.tracked_team_name }}" />
+    </label>
+
+    <label>
+      <span>Admin Discord IDs (comma separated)</span>
+      <input type="text" name="admin_discord_ids_csv" value="{{ state.runtime_config.admin_discord_ids | join(', ') }}" />
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="voice_join_sounds_enabled" {% if state.runtime_config.voice_join_sounds_enabled %}checked{% endif %} />
+      <span>Enable optional voice join sounds</span>
+    </label>
+
+    <h2>Advanced</h2>
+
+    <label>
+      <span>Worker idle poll seconds</span>
+      <input type="text" name="pubg_job_worker_idle_poll_seconds" value="{{ state.runtime_config.pubg_job_worker_idle_poll_seconds }}" />
+    </label>
+
+    <label>
+      <span>Job result poll seconds</span>
+      <input type="text" name="pubg_job_result_poll_seconds" value="{{ state.runtime_config.pubg_job_result_poll_seconds }}" />
+    </label>
+
+    <label>
+      <span>Job max wait seconds</span>
+      <input type="text" name="pubg_job_result_max_wait_seconds" value="{{ state.runtime_config.pubg_job_result_max_wait_seconds }}" />
+    </label>
+
+    <label>
+      <span>PUBG API rate limit max requests</span>
+      <input type="text" name="pubg_rate_limit_max_requests" value="{{ state.runtime_config.pubg_rate_limit_max_requests }}" />
+    </label>
+
+    <label>
+      <span>PUBG API rate limit window seconds</span>
+      <input type="text" name="pubg_rate_limit_window_seconds" value="{{ state.runtime_config.pubg_rate_limit_window_seconds }}" />
+    </label>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Save settings</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Initial Setup</h1>
+
+<section class="panel form-panel">
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if step == "admin" %}
+  <form method="post" action="/setup/admin">
+    <label>
+      <span>Admin username</span>
+      <input type="text" name="username" required />
+    </label>
+
+    <label>
+      <span>Admin password</span>
+      <input type="password" name="password" required />
+    </label>
+
+    <label>
+      <span>Confirm password</span>
+      <input type="password" name="confirm_password" required />
+    </label>
+
+    <label>
+      <span>Optional first admin Discord user ID</span>
+      <input type="text" name="owner_discord_id" />
+    </label>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Continue</button>
+    </div>
+  </form>
+  {% endif %}
+
+  {% if step == "runtime" %}
+  <form method="post" action="/setup/runtime">
+    <label>
+      <span>Discord bot token</span>
+      <input type="text" name="discord_bot_token" required />
+    </label>
+
+    <label>
+      <span>PUBG API key</span>
+      <input type="text" name="pubg_api_key" required />
+    </label>
+
+    <label>
+      <span>Discord guild ID</span>
+      <input type="text" name="discord_guild_id" required />
+    </label>
+
+    <label>
+      <span>Target voice channel ID</span>
+      <input type="text" name="discord_target_voice_channel_id" required />
+    </label>
+
+    <label>
+      <span>Target text channel ID</span>
+      <input type="text" name="discord_target_text_channel_id" required />
+    </label>
+
+    <label>
+      <span>Tracked team name</span>
+      <input type="text" name="tracked_team_name" value="My Stack" />
+    </label>
+
+    <label>
+      <span>Additional admin Discord IDs (comma separated)</span>
+      <input type="text" name="admin_discord_ids_csv" />
+    </label>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Finish setup</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

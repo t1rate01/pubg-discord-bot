@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>System</h1>
+
+<div class="card-grid">
+  <div class="card"><div class="label">Queued jobs</div><div class="value">{{ job_counts.queued }}</div></div>
+  <div class="card"><div class="label">Processing jobs</div><div class="value">{{ job_counts.processing }}</div></div>
+  <div class="card"><div class="label">Failed jobs</div><div class="value">{{ job_counts.failed }}</div></div>
+</div>
+
+<section class="panel">
+  <h2>Runtime State</h2>
+  <p>App initialized: <strong>{{ "Yes" if state.app_initialized else "No" }}</strong></p>
+  <p>Runtime config complete: <strong>{{ "Yes" if state.runtime_config_complete else "No" }}</strong></p>
+  <p>Tracked team name: <strong>{{ state.runtime_config.tracked_team_name }}</strong></p>
+</section>
+
+<section class="panel">
+  <h2>Service Control</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Enabled</th>
+          <th>Generation</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bot</td>
+          <td>{{ "Yes" if service_control.bot_enabled else "No" }}</td>
+          <td>{{ service_control.bot_generation }}</td>
+          <td class="actions">
+            <form method="post" action="/system/service/bot/toggle">
+              <button class="button secondary" type="submit">{{ "Disable" if service_control.bot_enabled else "Enable" }}</button>
+            </form>
+            <form method="post" action="/system/service/bot/restart">
+              <button class="button" type="submit">Restart</button>
+            </form>
+          </td>
+        </tr>
+        <tr>
+          <td>Worker</td>
+          <td>{{ "Yes" if service_control.worker_enabled else "No" }}</td>
+          <td>{{ service_control.worker_generation }}</td>
+          <td class="actions">
+            <form method="post" action="/system/service/worker/toggle">
+              <button class="button secondary" type="submit">{{ "Disable" if service_control.worker_enabled else "Enable" }}</button>
+            </form>
+            <form method="post" action="/system/service/worker/restart">
+              <button class="button" type="submit">Restart</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions" style="margin-top: 16px;">
+    <form method="post" action="/system/restart-all">
+      <button class="button" type="submit">Restart all services</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Recent Jobs</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>PUBG</th>
+          <th>Priority</th>
+          <th>Created</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>{{ job.id }}</td>
+          <td>{{ job.job_type }}</td>
+          <td>{{ job.status }}</td>
+          <td>{{ job.pubg_handle or "-" }}</td>
+          <td>{{ job.priority }}</td>
+          <td>{{ job.created_at }}</td>
+          <td>{{ job.error_text or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ "Edit user" if mode == "edit" else "Add user" }}</h1>
+
+<section class="panel form-panel">
+  <form method="post" enctype="multipart/form-data">
+    <label>
+      <span>Discord name</span>
+      <input type="text" name="discord_name" value="{{ user.discord_name if user else '' }}" required />
+    </label>
+
+    <label>
+      <span>Discord user ID</span>
+      <input type="text" name="discord_user_id" value="{{ user.discord_user_id if user else '' }}" required />
+    </label>
+
+    <label>
+      <span>PUBG handle</span>
+      <input type="text" name="pubg_handle" value="{{ user.pubg_handle if user and user.pubg_handle else '' }}" />
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="tracking_enabled" {% if user and user.tracking_enabled %}checked{% endif %} />
+      <span>Tracking enabled</span>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="history_enabled" {% if user and user.history_enabled %}checked{% endif %} />
+      <span>Save history for this user</span>
+    </label>
+
+    <h2>Optional Join Sound</h2>
+
+    <label class="checkbox">
+      <input type="checkbox" name="join_sound_enabled" {% if user and user.join_sound_enabled %}checked{% endif %} />
+      <span>Enable join sound for this user</span>
+    </label>
+
+    <label>
+      <span>Upload .mp3 file</span>
+      <input type="file" name="join_sound_file" accept=".mp3,audio/mpeg" />
+    </label>
+
+    {% if user and user.join_sound_path %}
+    <div class="muted-text">
+      Current file: {{ user.join_sound_path }}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a class="button secondary" href="/users">Cancel</a>
+      <button class="button" type="submit">{{ "Save changes" if mode == "edit" else "Create user" }}</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

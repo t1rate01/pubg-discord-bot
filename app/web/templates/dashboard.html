@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="card-grid">
+  <div class="card"><div class="label">Tracked users</div><div class="value">{{ counts.tracked }}</div></div>
+  <div class="card"><div class="label">History-enabled users</div><div class="value">{{ counts.history_enabled }}</div></div>
+  <div class="card"><div class="label">Tracking enabled</div><div class="value">{{ counts.tracking_enabled }}</div></div>
+  <div class="card"><div class="label">Queued jobs</div><div class="value">{{ counts.queued_jobs }}</div></div>
+  <div class="card"><div class="label">Processing jobs</div><div class="value">{{ counts.processing_jobs }}</div></div>
+  <div class="card"><div class="label">Saved reports</div><div class="value">{{ counts.reports }}</div></div>
+</div>
+
+<section class="panel">
+  <h2>System State</h2>
+  <p>App initialized: <strong>{{ "Yes" if state.app_initialized else "No" }}</strong></p>
+  <p>Runtime config complete: <strong>{{ "Yes" if state.runtime_config_complete else "No" }}</strong></p>
+  <p>Tracked team name: <strong>{{ state.runtime_config.tracked_team_name }}</strong></p>
+</section>
+
+<section class="panel">
+  <h2>Recent Reports</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Discord</th>
+          <th>PUBG</th>
+          <th>Games</th>
+          <th>KD</th>
+          <th>Avg Dmg</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent_reports %}
+        <tr>
+          <td>{{ r.discord_name or "-" }}</td>
+          <td>{{ r.pubg_handle }}</td>
+          <td>{{ r.total_rounds }}</td>
+          <td>{{ "%.2f"|format(r.total_kd) }}</td>
+          <td>{{ "%.1f"|format(r.total_avg_damage) }}</td>
+          <td>{{ r.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
