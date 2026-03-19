@@ -5,11 +5,14 @@ import uvicorn
 
 from app.core.logging import setup_logging
 from app.core.settings_service import system_state
+from app.db.sqlite import init_db
 from app.db.models import get_service_control_state
 from app.bot.main import build_bot_from_db
 from app.worker.main import build_worker
 
 setup_logging()
+init_db()
+
 logger = logging.getLogger("run_all")
 
 

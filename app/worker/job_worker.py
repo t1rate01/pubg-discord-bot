@@ -210,6 +210,13 @@ class JobWorker:
                 elif job["job_type"] == "session_finalize":
                     await self._handle_session_finalize(job)
 
+                elif job["job_type"] == "stats_lookup":
+                    payload = job.get("payload_json") or {}
+                    result = self.pubg_service.fetch_combined_stats(
+                        payload["pubg_handle"]
+                    )
+                    mark_job_done(job["id"], result)
+
                 else:
                     mark_job_failed(job["id"], f"Unknown job type: {job['job_type']}")
 

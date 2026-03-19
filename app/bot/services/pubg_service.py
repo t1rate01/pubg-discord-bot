@@ -34,6 +34,55 @@ def calc_kda(kills: int, assists: int, deaths: int) -> float:
     return safe_div(kills + assists, max(1, deaths))
 
 
+def summarize_mode(mode_stats: dict) -> dict:
+    rounds = mode_stats.get("roundsPlayed", 0)
+    kills = mode_stats.get("kills", 0)
+    assists = mode_stats.get("assists", 0)
+    wins = mode_stats.get("wins", 0)
+    top10s = mode_stats.get("top10s", 0)
+    damage = mode_stats.get("damageDealt", 0)
+    losses = mode_stats.get("losses", rounds)
+
+    return {
+        "rounds": rounds,
+        "kills": kills,
+        "assists": assists,
+        "wins": wins,
+        "top10s": top10s,
+        "damage": damage,
+        "kd": calc_kd(kills, losses),
+        "kda": calc_kda(kills, assists, losses),
+        "avg_damage": safe_div(damage, rounds) if rounds > 0 else 0,
+    }
+
+
+def summarize_ranked_mode(mode_stats: dict) -> dict:
+    rounds = mode_stats.get("roundsPlayed", 0)
+    kills = mode_stats.get("kills", 0)
+    assists = mode_stats.get("assists", 0)
+    damage = mode_stats.get("damageDealt", 0)
+    deaths = mode_stats.get("deaths", rounds)
+    wins = mode_stats.get("wins", 0)
+
+    return {
+        "rounds": rounds,
+        "kills": kills,
+        "assists": assists,
+        "wins": wins,
+        "damage": damage,
+        "kd": calc_kd(kills, deaths),
+        "kda": calc_kda(kills, assists, deaths),
+        "avg_damage": safe_div(damage, rounds) if rounds > 0 else 0,
+        "current_tier": mode_stats.get("currentTier", {}),
+        "best_tier": mode_stats.get("bestTier", {}),
+        "current_rank_point": mode_stats.get("currentRankPoint", 0),
+        "best_rank_point": mode_stats.get("bestRankPoint", 0),
+        "avg_rank": mode_stats.get("avgRank", 0),
+        "top10_ratio": mode_stats.get("top10Ratio", 0),
+        "win_ratio": mode_stats.get("winRatio", 0),
+    }
+
+
 class PubgService:
     def __init__(self):
         cfg = get_runtime_config()
@@ -91,9 +140,47 @@ class PubgService:
 
         return data[0]
 
+    def get_season_id(self) -> str:
+        url = f"{BASE_URL}/shards/{self.shard}/seasons"
+        data = self._request_json(url)
+
+        for s in data["data"]:
+            attrs = s["attributes"]
+            if attrs.get("isCurrentSeason") and not attrs.get("isOffseason"):
+                return s["id"]
+
+        raise RuntimeError("No current season found")
+
+    def get_stats(self, player_id: str, season_id: str) -> dict:
+        url = f"{BASE_URL}/shards/{self.shard}/players/{player_id}/seasons/{season_id}"
+        return self._request_json(url)
+
+    def get_ranked(self, player_id: str, season_id: str) -> dict:
+        url = f"{BASE_URL}/shards/{self.shard}/players/{player_id}/seasons/{season_id}/ranked"
+        return self._request_json(url)
+
     def get_match(self, match_id: str) -> dict:
         url = f"{BASE_URL}/shards/{self.shard}/matches/{match_id}"
         return self._request_json(url)
+
+    def fetch_combined_stats(self, name: str) -> dict:
+        player = self.get_player(name)
+        pid = player["id"]
+        season_id = self.get_season_id()
+        stats = self.get_stats(pid, season_id)
+        ranked = self.get_ranked(pid, season_id)
+
+        return {
+            "player": player["attributes"]["name"],
+            "season_id": season_id,
+            "stats": stats,
+            "ranked": ranked,
+            "parsed": self.build_stats_embed_data({
+                "player": player["attributes"]["name"],
+                "stats": stats,
+                "ranked": ranked,
+            }),
+        }
 
     def _extract_recent_match_ids(self, player: dict) -> list[str]:
         relationships = player.get("relationships", {})
@@ -116,11 +203,7 @@ class PubgService:
 
         return None
 
-    def find_first_session_match_time(
-        self,
-        pubg_handle: str,
-        started_at: str,
-    ) -> str | None:
+    def find_first_session_match_time(self, pubg_handle: str, started_at: str) -> str | None:
         player = self.get_player(pubg_handle)
         recent_match_ids = self._extract_recent_match_ids(player)
         start_dt = parse_pubg_ts(started_at)
@@ -137,10 +220,8 @@ class PubgService:
 
             if created_at < start_dt:
                 continue
-
             if is_custom:
                 continue
-
             if game_mode not in ALLOWED_GAME_MODES:
                 continue
 
@@ -181,10 +262,8 @@ class PubgService:
 
             if created_at < lower_bound or created_at > end_dt:
                 continue
-
             if is_custom:
                 continue
-
             if game_mode not in ALLOWED_GAME_MODES:
                 continue
 
@@ -239,4 +318,46 @@ class PubgService:
             "ranked": aggregate(ranked_games),
             "normal": aggregate(normal_games),
             "games": matched_games,
+        }
+
+    def build_stats_embed_data(self, result: dict) -> dict:
+        normal_modes = result["stats"]["data"]["attributes"]["gameModeStats"]
+        ranked_modes = result["ranked"]["data"]["attributes"].get("rankedGameModeStats", {})
+
+        solo_fpp = summarize_mode(normal_modes.get("solo-fpp", {}))
+        duo_fpp = summarize_mode(normal_modes.get("duo-fpp", {}))
+        squad_fpp = summarize_mode(normal_modes.get("squad-fpp", {}))
+
+        ranked_duo = summarize_ranked_mode(ranked_modes.get("duo-fpp", {}))
+        ranked_squad = summarize_ranked_mode(ranked_modes.get("squad-fpp", {}))
+
+        normal_rounds = solo_fpp["rounds"] + duo_fpp["rounds"] + squad_fpp["rounds"]
+        normal_kills = solo_fpp["kills"] + duo_fpp["kills"] + squad_fpp["kills"]
+        normal_assists = solo_fpp["assists"] + duo_fpp["assists"] + squad_fpp["assists"]
+        normal_losses = max(1, normal_rounds - (solo_fpp["wins"] + duo_fpp["wins"] + squad_fpp["wins"]))
+        normal_damage = solo_fpp["damage"] + duo_fpp["damage"] + squad_fpp["damage"]
+
+        ranked_rounds = ranked_duo["rounds"] + ranked_squad["rounds"]
+        ranked_kills = ranked_duo["kills"] + ranked_squad["kills"]
+        ranked_assists = ranked_duo["assists"] + ranked_squad["assists"]
+        ranked_damage = ranked_duo["damage"] + ranked_squad["damage"]
+        ranked_deaths = max(1, ranked_rounds)
+
+        return {
+            "player_name": result["player"],
+            "solo_fpp": solo_fpp,
+            "duo_fpp": duo_fpp,
+            "squad_fpp": squad_fpp,
+            "ranked_duo": ranked_duo,
+            "ranked_squad": ranked_squad,
+            "normal_rounds": normal_rounds,
+            "normal_kills": normal_kills,
+            "normal_assists": normal_assists,
+            "normal_losses": normal_losses,
+            "normal_damage": normal_damage,
+            "ranked_rounds": ranked_rounds,
+            "ranked_kills": ranked_kills,
+            "ranked_assists": ranked_assists,
+            "ranked_damage": ranked_damage,
+            "ranked_deaths": ranked_deaths,
         }

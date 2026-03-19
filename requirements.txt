@@ -9,7 +9,7 @@ PyNaCl
 requests
 python-dotenv
 
-passlib[bcrypt]
+passlib
 
 pydantic
 pydantic-settings

@@ -3,6 +3,7 @@ import discord
 
 from app.db.models import get_runtime_config
 from app.bot.events.voice import VoiceEventHandler
+from app.bot.commands.tracker import TrackerCommands
 
 logger = logging.getLogger("discord_bot")
 
@@ -17,7 +18,15 @@ class PubgDiscordBot(discord.Client):
         super().__init__(intents=intents)
 
         self.guild_id = guild_id
+        self.tree = discord.app_commands.CommandTree(self)
         self.voice_handler = VoiceEventHandler(target_voice_channel_id)
+
+    async def setup_hook(self):
+        guild = discord.Object(id=self.guild_id)
+        self.tree.clear_commands(guild=guild)
+        self.tree.add_command(TrackerCommands(), guild=guild)
+        synced = await self.tree.sync(guild=guild)
+        logger.info(f"Synced {len(synced)} guild application commands")
 
     async def on_ready(self):
         logger.info(f"Discord bot connected as {self.user}")

@@ -310,3 +310,50 @@ def request_all_services_restart() -> dict:
         "bot_generation": bump_service_generation("bot"),
         "worker_generation": bump_service_generation("worker"),
     }
+
+def upsert_tracked_user_by_discord_id(
+    discord_user_id: int,
+    discord_name: str,
+    pubg_handle: Optional[str] = None,
+    tracking_enabled: bool = False,
+) -> None:
+    existing = get_tracked_user_by_discord_id(discord_user_id)
+
+    if existing:
+        update_tracked_user(
+            user_id=existing["id"],
+            discord_user_id=str(discord_user_id),
+            discord_name=discord_name,
+            pubg_handle=pubg_handle,
+            tracking_enabled=tracking_enabled,
+            history_enabled=bool(existing["history_enabled"]),
+            join_sound_enabled=bool(existing["join_sound_enabled"]),
+            join_sound_path=existing["join_sound_path"],
+        )
+    else:
+        create_tracked_user(
+            discord_user_id=str(discord_user_id),
+            discord_name=discord_name,
+            pubg_handle=pubg_handle,
+            tracking_enabled=tracking_enabled,
+            history_enabled=False,
+            join_sound_enabled=False,
+            join_sound_path=None,
+        )
+
+
+def set_tracking_enabled_by_discord_id(discord_user_id: int, enabled: bool) -> None:
+    existing = get_tracked_user_by_discord_id(discord_user_id)
+    if not existing:
+        return
+
+    update_tracked_user(
+        user_id=existing["id"],
+        discord_user_id=existing["discord_user_id"],
+        discord_name=existing["discord_name"],
+        pubg_handle=existing["pubg_handle"],
+        tracking_enabled=enabled,
+        history_enabled=bool(existing["history_enabled"]),
+        join_sound_enabled=bool(existing["join_sound_enabled"]),
+        join_sound_path=existing["join_sound_path"],
+    )
