@@ -1,57 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="page-header">
-  <h1>Report Detail</h1>
-  <a class="button secondary" href="/reports">Back to reports</a>
+  <h1>Report Details</h1>
+
+  <form
+    method="post"
+    action="/reports/{{ report.id }}/delete"
+    onsubmit="return confirm('Delete this report? This cannot be undone.')"
+  >
+    <button type="submit">Delete Report</button>
+  </form>
 </div>
 
 <section class="panel">
-  <h2>{{ report.discord_name or "-" }} / {{ report.pubg_handle }}</h2>
-  <p>Started: <strong>{{ report.started_at }}</strong></p>
-  <p>First match: <strong>{{ report.first_match_at or "-" }}</strong></p>
-  <p>Ended: <strong>{{ report.ended_at }}</strong></p>
-</section>
-
-<section class="panel">
   <h2>Summary</h2>
-  <div class="card-grid">
-    <div class="card"><div class="label">Games</div><div class="value">{{ report.total_rounds }}</div></div>
-    <div class="card"><div class="label">KD</div><div class="value">{{ "%.2f"|format(report.total_kd) }}</div></div>
-    <div class="card"><div class="label">Avg Dmg</div><div class="value">{{ "%.1f"|format(report.total_avg_damage) }}</div></div>
-  </div>
+  <p><strong>Discord:</strong> {{ report.discord_name or "-" }}</p>
+  <p><strong>PUBG:</strong> {{ report.pubg_handle }}</p>
+  <p><strong>Total rounds:</strong> {{ report.total_rounds }}</p>
+  <p><strong>KD:</strong> {{ "%.2f"|format(report.total_kd) }}</p>
+  <p><strong>Average damage:</strong> {{ "%.1f"|format(report.total_avg_damage) }}</p>
+  <p><strong>Created at:</strong> {{ report.created_at }}</p>
 </section>
 
 <section class="panel">
-  <h2>Included Matches</h2>
+  <h2>Matches</h2>
+
+  {% if matches %}
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Created</th>
+          <th>Map</th>
           <th>Mode</th>
-          <th>Type</th>
           <th>Placement</th>
           <th>Kills</th>
-          <th>Assists</th>
           <th>Damage</th>
-          <th>DBNOs</th>
+          <th>Time</th>
         </tr>
       </thead>
       <tbody>
         {% for m in matches %}
         <tr>
-          <td>{{ m.created_at }}</td>
+          <td>{{ m.map_name }}</td>
           <td>{{ m.game_mode }}</td>
-          <td>{{ m.match_type }}</td>
-          <td>{{ m.placement }}</td>
+          <td>#{{ m.placement }}</td>
           <td>{{ m.kills }}</td>
-          <td>{{ m.assists }}</td>
-          <td>{{ "%.1f"|format(m.damage) }}</td>
-          <td>{{ m.dbnos }}</td>
+          <td>{{ m.damage }}</td>
+          <td>{{ m.played_at }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+  {% else %}
+  <p>No matches stored for this report.</p>
+  {% endif %}
 </section>
+
+<a href="/reports">← Back to reports</a>
+
 {% endblock %}

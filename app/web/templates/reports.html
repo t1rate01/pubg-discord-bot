@@ -1,39 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Saved Reports</h1>
+<h1>Reports</h1>
 
-<section class="panel">
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Discord</th>
-          <th>PUBG</th>
-          <th>Total games</th>
-          <th>KD</th>
-          <th>Avg damage</th>
-          <th>Ranked games</th>
-          <th>Normal games</th>
-          <th>Created</th>
-          <th>View</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in reports %}
-        <tr>
-          <td>{{ r.discord_name or "-" }}</td>
-          <td>{{ r.pubg_handle }}</td>
-          <td>{{ r.total_rounds }}</td>
-          <td>{{ "%.2f"|format(r.total_kd) }}</td>
-          <td>{{ "%.1f"|format(r.total_avg_damage) }}</td>
-          <td>{{ r.ranked_rounds }}</td>
-          <td>{{ r.normal_rounds }}</td>
-          <td>{{ r.created_at }}</td>
-          <td><a class="button secondary" href="/reports/{{ r.id }}">Open</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Discord</th>
+        <th>PUBG</th>
+        <th>Games</th>
+        <th>KD</th>
+        <th>Avg Dmg</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reports %}
+      <tr>
+        <td>{{ r.discord_name or "-" }}</td>
+        <td>{{ r.pubg_handle }}</td>
+        <td>{{ r.total_rounds }}</td>
+        <td>{{ "%.2f"|format(r.total_kd) }}</td>
+        <td>{{ "%.1f"|format(r.total_avg_damage) }}</td>
+        <td>{{ r.created_at }}</td>
+        <td>
+          <a href="/reports/{{ r.id }}">View</a>
+          |
+          <form
+            method="post"
+            action="/reports/{{ r.id }}/delete"
+            style="display:inline;"
+          >
+            <button
+              type="submit"
+              onclick="return confirm('Delete this report? This cannot be undone.')"
+            >
+              Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if not reports %}
+<p>No reports yet.</p>
+{% endif %}
+
 {% endblock %}

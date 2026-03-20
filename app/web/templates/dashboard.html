@@ -19,6 +19,41 @@
 </section>
 
 <section class="panel">
+  <div class="page-header">
+    <h2>Active Sessions</h2>
+  </div>
+
+  {% if active_sessions %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Discord</th>
+          <th>PUBG</th>
+          <th>Started</th>
+          <th>First match</th>
+          <th>Saved session count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in active_sessions %}
+        <tr>
+          <td>{{ s.discord_name or "-" }}</td>
+          <td>{{ s.pubg_handle or "-" }}</td>
+          <td>{{ s.started_at }}</td>
+          <td>{{ s.first_match_at or "-" }}</td>
+          <td>{{ s.total_saved_sessions }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>No active sessions right now.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
   <h2>Recent Reports</h2>
   <div class="table-wrap">
     <table>

@@ -4,51 +4,122 @@
 
 <section class="panel form-panel">
   <form method="post" action="/settings">
+
+    <!-- ================= GENERAL ================= -->
+    <h2>General</h2>
+
     <label>
       <span>Tracked team name</span>
-      <input type="text" name="tracked_team_name" value="{{ state.runtime_config.tracked_team_name }}" />
+      <input
+        type="text"
+        name="tracked_team_name"
+        value="{{ state.runtime_config.tracked_team_name }}"
+      />
     </label>
 
     <label>
       <span>Admin Discord IDs (comma separated)</span>
-      <input type="text" name="admin_discord_ids_csv" value="{{ state.runtime_config.admin_discord_ids | join(', ') }}" />
+      <input
+        type="text"
+        name="admin_discord_ids_csv"
+        value="{{ state.runtime_config.admin_discord_ids | join(', ') }}"
+      />
     </label>
 
+    <!-- ================= VOICE ================= -->
+    <h2>Voice</h2>
+
     <label class="checkbox">
-      <input type="checkbox" name="voice_join_sounds_enabled" {% if state.runtime_config.voice_join_sounds_enabled %}checked{% endif %} />
+      <input
+        type="checkbox"
+        name="voice_join_sounds_enabled"
+        {% if state.runtime_config.voice_join_sounds_enabled %}checked{% endif %}
+      />
       <span>Enable optional voice join sounds</span>
     </label>
 
-    <h2>Advanced</h2>
+    <!-- ================= SESSION BEHAVIOR ================= -->
+    <h2>Session Behavior</h2>
+
+    <label>
+      <span>Session end grace (seconds)</span>
+      <input
+        type="number"
+        name="session_end_grace_seconds"
+        value="{{ state.runtime_config.session_end_grace_seconds }}"
+        min="0"
+      />
+      <small>How long a user can leave VC before session ends.</small>
+    </label>
+
+    <label>
+      <span>Session start anchor delay (seconds)</span>
+      <input
+        type="number"
+        name="session_anchor_delay_seconds"
+        value="{{ state.runtime_config.session_anchor_delay_seconds }}"
+        min="0"
+      />
+      <small>Delay before first match lookup after session start.</small>
+    </label>
+
+    <!-- ================= PUBG WORKER ================= -->
+    <h2>Worker / Polling</h2>
 
     <label>
       <span>Worker idle poll seconds</span>
-      <input type="text" name="pubg_job_worker_idle_poll_seconds" value="{{ state.runtime_config.pubg_job_worker_idle_poll_seconds }}" />
+      <input
+        type="number"
+        name="pubg_job_worker_idle_poll_seconds"
+        value="{{ state.runtime_config.pubg_job_worker_idle_poll_seconds }}"
+      />
     </label>
 
     <label>
       <span>Job result poll seconds</span>
-      <input type="text" name="pubg_job_result_poll_seconds" value="{{ state.runtime_config.pubg_job_result_poll_seconds }}" />
+      <input
+        type="number"
+        name="pubg_job_result_poll_seconds"
+        value="{{ state.runtime_config.pubg_job_result_poll_seconds }}"
+      />
     </label>
 
     <label>
       <span>Job max wait seconds</span>
-      <input type="text" name="pubg_job_result_max_wait_seconds" value="{{ state.runtime_config.pubg_job_result_max_wait_seconds }}" />
+      <input
+        type="number"
+        name="pubg_job_result_max_wait_seconds"
+        value="{{ state.runtime_config.pubg_job_result_max_wait_seconds }}"
+      />
+    </label>
+
+    <!-- ================= PUBG RATE LIMIT ================= -->
+    <h2>PUBG API Limits</h2>
+
+    <label>
+      <span>Max requests per window</span>
+      <input
+        type="number"
+        name="pubg_rate_limit_max_requests"
+        value="{{ state.runtime_config.pubg_rate_limit_max_requests }}"
+      />
     </label>
 
     <label>
-      <span>PUBG API rate limit max requests</span>
-      <input type="text" name="pubg_rate_limit_max_requests" value="{{ state.runtime_config.pubg_rate_limit_max_requests }}" />
+      <span>Rate limit window (seconds)</span>
+      <input
+        type="number"
+        name="pubg_rate_limit_window_seconds"
+        value="{{ state.runtime_config.pubg_rate_limit_window_seconds }}"
+      />
     </label>
 
-    <label>
-      <span>PUBG API rate limit window seconds</span>
-      <input type="text" name="pubg_rate_limit_window_seconds" value="{{ state.runtime_config.pubg_rate_limit_window_seconds }}" />
-    </label>
-
+    <!-- ================= ACTIONS ================= -->
     <div class="form-actions">
       <button class="button" type="submit">Save settings</button>
     </div>
+
   </form>
 </section>
+
 {% endblock %}

@@ -84,6 +84,8 @@ def get_runtime_config() -> dict:
         "pubg_job_result_max_wait_seconds": float(get_setting("pubg_job_result_max_wait_seconds", "30")),
         "pubg_rate_limit_max_requests": int(get_setting("pubg_rate_limit_max_requests", "10")),
         "pubg_rate_limit_window_seconds": int(get_setting("pubg_rate_limit_window_seconds", "60")),
+        "session_end_grace_seconds": int(get_setting("session_end_grace_seconds", "90")),
+        "session_anchor_delay_seconds": int(get_setting("session_anchor_delay_seconds", "180")),
     }
 
 
@@ -357,3 +359,44 @@ def set_tracking_enabled_by_discord_id(discord_user_id: int, enabled: bool) -> N
         join_sound_enabled=bool(existing["join_sound_enabled"]),
         join_sound_path=existing["join_sound_path"],
     )
+
+def list_active_sessions_with_counts() -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                ts.id,
+                ts.discord_user_id,
+                ts.discord_name,
+                ts.pubg_handle,
+                ts.started_at,
+                ts.first_match_at,
+                ts.voice_channel_id,
+                COALESCE(sr_counts.total_reports, 0) AS total_saved_sessions
+            FROM tracking_sessions ts
+            LEFT JOIN (
+                SELECT
+                    discord_user_id,
+                    COUNT(*) AS total_reports
+                FROM session_reports
+                GROUP BY discord_user_id
+            ) sr_counts
+                ON sr_counts.discord_user_id = ts.discord_user_id
+            WHERE ts.status = 'active'
+            ORDER BY ts.started_at ASC
+            """
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+    
+def delete_report(report_id: int) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            "DELETE FROM session_reports WHERE id = ?",
+            (report_id,),
+        )
+        conn.execute(
+            "DELETE FROM session_matches WHERE report_id = ?",
+            (report_id,),
+        )
+        conn.commit()

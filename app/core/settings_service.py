@@ -1,6 +1,5 @@
 from app.db.models import (
     app_is_initialized,
-    create_tracked_user,
     get_runtime_config,
     mark_app_initialized,
     runtime_config_complete,
@@ -17,6 +16,8 @@ SAFE_DEFAULTS = {
     "pubg_job_result_max_wait_seconds": "30",
     "pubg_rate_limit_max_requests": "10",
     "pubg_rate_limit_window_seconds": "60",
+    "session_end_grace_seconds": "120",
+    "session_anchor_delay_seconds": "180",
 }
 
 

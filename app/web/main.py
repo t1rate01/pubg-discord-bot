@@ -11,6 +11,7 @@ from app.core.auth import admin_exists, create_admin
 from app.core.logging import setup_logging
 from app.core.settings_service import initialize_runtime_config, system_state
 from app.db.sqlite import init_db
+from app.db.models import delete_report
 from app.db.models import (
     dashboard_counts,
     list_recent_reports,
@@ -26,6 +27,7 @@ from app.db.models import (
     set_service_enabled,
     request_service_restart,
     request_all_services_restart,
+    list_active_sessions_with_counts,
 )
 from app.db.runtime_models import (
     list_recent_jobs,
@@ -88,6 +90,7 @@ async def dashboard(request: Request):
             "state": state,
             "counts": dashboard_counts(),
             "recent_reports": list_recent_reports(),
+            "active_sessions": list_active_sessions_with_counts(),
         },
     )
 
@@ -313,6 +316,8 @@ async def settings_action(
     pubg_job_result_max_wait_seconds: str = Form(...),
     pubg_rate_limit_max_requests: str = Form(...),
     pubg_rate_limit_window_seconds: str = Form(...),
+    session_end_grace_seconds: str = Form(...),
+    session_anchor_delay_seconds: str = Form(...),
 ):
     require_basic_auth(request)
 
@@ -328,6 +333,8 @@ async def settings_action(
             "pubg_job_result_max_wait_seconds": pubg_job_result_max_wait_seconds.strip(),
             "pubg_rate_limit_max_requests": pubg_rate_limit_max_requests.strip(),
             "pubg_rate_limit_window_seconds": pubg_rate_limit_window_seconds.strip(),
+            "session_end_grace_seconds": int(session_end_grace_seconds),
+            "session_anchor_delay_seconds": int(session_anchor_delay_seconds),
         }
     )
 
@@ -401,3 +408,11 @@ async def restart_all_services(request: Request):
     require_basic_auth(request)
     request_all_services_restart()
     return redirect("/system")
+
+@app.post("/reports/{report_id}/delete")
+async def delete_report_action(request: Request, report_id: int):
+    require_basic_auth(request)
+
+    delete_report(report_id)
+
+    return redirect("/reports")

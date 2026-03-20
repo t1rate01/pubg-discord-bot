@@ -27,7 +27,13 @@ class DiscordTrackingService:
 
         existing = get_active_session(discord_user_id)
         if existing:
-            return None
+            return {
+                "session_id": existing["id"],
+                "discord_name": existing["discord_name"],
+                "pubg_handle": existing["pubg_handle"],
+                "history_enabled": bool(user["history_enabled"]),
+                "reused_existing": True,
+            }
 
         session_id = start_tracking_session(
             discord_user_id=discord_user_id,
@@ -36,26 +42,38 @@ class DiscordTrackingService:
             voice_channel_id=voice_channel_id,
         )
 
-        enqueue_job(
-            job_type="session_anchor",
-            discord_user_id=discord_user_id,
-            pubg_handle=user["pubg_handle"],
-            session_id=session_id,
-            priority=90,
-            payload={
-                "session_id": session_id,
-                "discord_name": discord_name,
-                "pubg_handle": user["pubg_handle"],
-                "started_at": get_session(session_id)["started_at"],
-            },
-        )
+        created_session = get_session(session_id)
 
         return {
             "session_id": session_id,
             "discord_name": discord_name,
             "pubg_handle": user["pubg_handle"],
             "history_enabled": bool(user["history_enabled"]),
+            "started_at": created_session["started_at"] if created_session else None,
+            "reused_existing": False,
         }
+
+    def enqueue_session_anchor_if_needed(self, session_id: int) -> None:
+        session = get_session(session_id)
+        if not session:
+            return
+
+        if session["first_match_at"]:
+            return
+
+        enqueue_job(
+            job_type="session_anchor",
+            discord_user_id=int(session["discord_user_id"]),
+            pubg_handle=session["pubg_handle"],
+            session_id=session["id"],
+            priority=90,
+            payload={
+                "session_id": session["id"],
+                "discord_name": session["discord_name"],
+                "pubg_handle": session["pubg_handle"],
+                "started_at": session["started_at"],
+            },
+        )
 
     def end_session_if_needed(self, discord_user_id: int) -> dict | None:
         existing = get_active_session(discord_user_id)
